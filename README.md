@@ -23,3 +23,5 @@ Looking at regular season matchups of Western Conference teams vs Eastern Confer
 ## 2. Did Bottom seeded Western Conference playoff teams regularly beat top seeded Eastern Conference playoff teams? 
 **Work on this title...**
 The playoffs is where it really matters! This where we really get to see which team, in a best of 7 game competition, has what it takes to get a chance at the title. The only problem for us is that we want to compare the two conferences and they don't play eachother in the playoffs until the finals. The best we can do is focus our comparison from conference against conference to playoff teams against playoff teams. 
+![image 2 1 - East vs West Playoffs](https://github.com/user-attachments/assets/17467276-7318-4ad3-bc9b-8936def07da1)
+
