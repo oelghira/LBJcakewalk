@@ -40,3 +40,4 @@ With this in mind, I want to remind us that this would not even be a question as
 
 ## 3. LeBron lost more to Western Conference playoff teams than Eastern Conference playoff teams
 ## 3. So Did LeBron's teams lose more to the West than the East?
+![image 3 1 - lbj west east conf](https://github.com/user-attachments/assets/0390efe0-6197-4828-9d49-4d63757b46df)
