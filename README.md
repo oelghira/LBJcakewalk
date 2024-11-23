@@ -42,5 +42,7 @@ With this in mind, I want to remind us that this would not even be a question as
 ## 3. So Did LeBron's teams lose more to the West than the East?
 ![image 3 1 3 - lbj east conf](https://github.com/user-attachments/assets/6ee795b5-82a2-40c7-b474-88c1f5a726ea)
 ![image 3 1 4 - lbj west conf](https://github.com/user-attachments/assets/15d891bd-489e-4d8b-b637-dc0e56a0d37d)
+![image 4 1 - lbj east top 4](https://github.com/user-attachments/assets/293fbfcc-2991-4a0c-9dfd-f6eea4e6970d)
+
 
 
