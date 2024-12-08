@@ -40,14 +40,17 @@ With this in mind, I want to remind us that this would not even be a question as
 
 ## 3. LeBron lost more to Western Conference playoff teams than Eastern Conference playoff teams
 ## 3. So Did LeBron's teams lose more to the West than the East?
-![image 3 1 3 - lbj east conf](https://github.com/user-attachments/assets/93a92d27-5a10-441d-8b12-c5b5899bdf97)
 
 ![image 3 1 4 - lbj west conf](https://github.com/user-attachments/assets/504d221d-b007-4172-ba46-e06e293a589c)
+At first glance, it is easy to see that LeBron won at least 50% of his games against the tougher Western conference except for his very first year in league in the 2003-2004 season (2004 szn above). This isn't surprising. LeBron is clearly an exceptional player. But...
+
+![image 4 2 - lbj west top 4](https://github.com/user-attachments/assets/824a6a2d-fa73-461f-bff8-ebf3efe93131)
+When we shift our focus to LeBron versus the top 4 teams in the West, the story is much more interestings. LeBron's win percentage builds up from his first season in the league to his peak in the 2012-2013 season (2013 szn above) then starts to decline until his final years in the East resemble his earliest years as a professional. 
 
 ![image 4 1 - lbj east top 4](https://github.com/user-attachments/assets/24c7a9a4-a084-449f-9d96-24e59905a1b3)
 
-![image 4 2 - lbj west top 4](https://github.com/user-attachments/assets/824a6a2d-fa73-461f-bff8-ebf3efe93131)
 
+![image 3 1 3 - lbj east conf](https://github.com/user-attachments/assets/93a92d27-5a10-441d-8b12-c5b5899bdf97)
 
 
 
