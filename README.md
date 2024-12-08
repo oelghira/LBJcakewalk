@@ -46,7 +46,7 @@ With this in mind, I want to remind us that this would not even be a question as
 
 ![image 4 1 - lbj east top 4](https://github.com/user-attachments/assets/24c7a9a4-a084-449f-9d96-24e59905a1b3)
 
-![image 4 2 - lbj west top 4](https://github.com/user-attachments/assets/9603626b-8098-4364-a19c-f656665c0a5c)
+![image 4 2 - lbj west top 4](https://github.com/user-attachments/assets/824a6a2d-fa73-461f-bff8-ebf3efe93131)
 
 
 
