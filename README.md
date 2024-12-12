@@ -46,6 +46,7 @@ At first glance, it is easy to see that LeBron won at least 50% of his games aga
 
 ![image 4 2 - lbj west top 4](https://github.com/user-attachments/assets/824a6a2d-fa73-461f-bff8-ebf3efe93131)
 When we shift our focus to LeBron versus the top 4 teams in the West, the story is much more interestings. LeBron's win percentage builds up from his first season in the league to his peak in the 2012-2013 season (2013 szn above) then starts to decline until his final years in the East resemble his earliest years as a professional. There's many ways to describe what we are seeing. One version could be that as LeBron progressed in the league his win percentage against the best teams improved, then decreased again once he teamed up with Dwayne Wade and Chris Bosh in Miami until they figured out how to maximize thier talents and reached his peak winning percentage in 2012-2013 season, then decreased and held steady as he switched teams, and then saved as much as possible for the post season in his final years in his return to Cleveland. You could also tell a story for each invidivual season and his different team mates and their experience and age. One thing that is indisputable is that LeBron's average win percentage against the top 4 teams in the West was 48%. Excluding his first year his average jumps to 50%. 
+![image 5 1](https://github.com/user-attachments/assets/3edda738-fb34-40a7-a948-d437cd619b5a)
 
 ![image 4 1 - lbj east top 4](https://github.com/user-attachments/assets/24c7a9a4-a084-449f-9d96-24e59905a1b3)
 
