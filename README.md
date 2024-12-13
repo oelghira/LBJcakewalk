@@ -13,14 +13,14 @@ Skip never defines what he means by a "cake-walk" but we can interpret it as LeB
   3) LeBron lost more to Western Conference playoff teams than Eastern Conference playoff teams
 
 ## A Brief List of LeBron's Career Accolades :trophy:
-LeBron James is one of the most accomplished players to ever dribble a ball in the NBA. If you google him, you'll find much more than I can list here. A small sample of what he has accomplished in his career to date are:
+If you don't know who LeBron James is, I'm sure you have heard his name. He's one of the most accomplished players to ever dribble a ball in the NBA and for good reason. If you google him, you'll find much more than I can list here. A small list of what he has achieved to date are:
   - 4x NBA Champion (2012, 2013, 2016, 2020)
   - 4x NBA Finals MVP (2012, 2013, 2016, 2020)
   - 4x NBA MVP (2009, 2010, 2012, 2013)
   - 13x NBA First Team Selection
   - 5x NBA All-Defense First Team Selection
   - NBA Rookie Of The Year
-  - All Time Leading Scorer in the NBA 
+  - All Time Leading Scorer in the NBA
 
 ## 1. Did teams in the West regularly beat teams in the East during LBJ's run? 
 ![image 1 - East vs West](https://github.com/user-attachments/assets/eb2f2b12-31e4-4eb4-8c75-88273611dfa1)
