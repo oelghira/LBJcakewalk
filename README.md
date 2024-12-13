@@ -34,7 +34,7 @@ The chart above paints an even clearer picture that the West's top teams won muc
 <br/>  
 ![image 2 2 - East vs West Playoffs](https://github.com/user-attachments/assets/78bf18fe-67e3-4e65-9069-785065d1d729)
 <br/>  
-The chart above is almost like the icing on the cake. Comparing the West's bottom 4 seeds against the East's top 4 seeds, the average annual win percentage by the bottom 4 playoff teams is 59.9%! **thats higher than...** We could also compare top 4 seed against top 4 seed in each conference, but that seems like overkill at this point. Skip's analysis of LeBron having a "cake-wall" through 15 seasons in the East seems right on the money. The data does not lie to us. The competition LeBron went through to get to the NBA finals 9 times out of the East was not as difficult as the path the Golden State Warriors, San Antonio Spurs, OKC Thunder, or Dallas Mavericks had to take. 
+The chart above is almost like the icing on the cake. Comparing the West's bottom 4 seeds against the East's top 4 seeds, the average annual win percentage by the bottom 4 playoff teams is 59.9%! **thats higher than...** We could also compare top 4 seed against top 4 seed in each conference, but that seems like overkill at this point. Skip's analysis of LeBron having a "cake-walk" through 15 seasons in the East seems right on the money. The data does not lie to us. The competition LeBron went through to get to the NBA finals 9 times out of the East was not as difficult as the path the Golden State Warriors, San Antonio Spurs, OKC Thunder, or Dallas Mavericks had to take. 
 
 With this in mind, I want to remind us that this would not even be a question asked if one man hadn't accomplished so much that we had to wonder how was it possible? LeBron is an exceptional player, so before we conclude that Skip was right this whole time and LeBron really had a "cake-walk" to the finals we need to focus on how he and his teams compared to the tougher Western Conference.
 
@@ -45,20 +45,22 @@ With this in mind, I want to remind us that this would not even be a question as
 At first glance, it is easy to see that LeBron won at least 50% of his games against the tougher Western conference except for his very first year in league in the 2003-2004 season (2004 szn above). This isn't surprising. LeBron is clearly an exceptional player. But...
 
 ![image 4 2 - lbj west top 4](https://github.com/user-attachments/assets/824a6a2d-fa73-461f-bff8-ebf3efe93131)
-When we shift our focus to LeBron versus the top 4 teams in the West, the story is much more interestings. LeBron's win percentage builds up from his first season in the league to his peak in the 2012-2013 season (2013 szn above) then starts to decline until his final years in the East resemble his earliest years as a professional. There's many ways to describe what we are seeing. One version could be that as LeBron progressed in the league his win percentage against the best teams improved, then decreased again once he teamed up with Dwayne Wade and Chris Bosh in Miami until they figured out how to maximize thier talents and reached his peak winning percentage in 2012-2013 season, then decreased and held steady as he switched teams, and then saved as much as possible for the post season in his final years in his return to Cleveland. You could also tell a story for each invidivual season and his different team mates and their experience and age. One thing that is indisputable is that LeBron's average win percentage against the top 4 teams in the West was 48%. Excluding his first year his average jumps to 50%. Before making a conclusion on whether or not LeBron "cake-walked" through the East is to compare how his teams and the NBA champ performed against the top seeds in the West. 
+When we shift our focus to LeBron versus the top 4 teams in the West, the story is much more interesting. LeBron's win percentage builds up from his first season in the league to his peak in the 2012-2013 season (2013 szn above) then starts to decline until his final years in the East resemble his earliest years as a professional. There's many ways to describe what we are seeing. One version could be that as LeBron progressed in the league his win percentage against the best teams improved, then decreased again once he teamed up with Dwayne Wade and Chris Bosh in Miami until they figured out how to maximize thier talents and reached his peak winning percentage in 2012-2013 season, then decreased and held steady as he switched teams, and then saved as much as possible for the post season in his final years in his return to Cleveland. You could also tell a story for each invidivual season and his different team mates and their experience and age. One thing that is indisputable is that LeBron's average win percentage against the top 4 teams in the West was 48%. Excluding his first year his average jumps to 50%. Before making a conclusion on whether or not LeBron "cake-walked" through the East is to compare how his teams and the NBA champ performed against the top seeds in the West. 
 ![image 5 1](https://github.com/user-attachments/assets/3edda738-fb34-40a7-a948-d437cd619b5a)
-In the 15 seasons LeBron played in the East, he either won the championship or outplayed the eventual champ in 8 out of 15 years (represented by the circled points above). 
+In the 15 seasons LeBron played in the East, he either won the championship or outplayed the eventual champ in 8 out of 15 years against the top 4 teams in the West (represented by the circled points above). 
 
 ## Conclusion
-From all of the above....
+After taking a deep dive look into this we can conclude that in LeBron's 15 years playing in the Eastern Conference:
+1) The teams in the West regularly won more than 50% of thier games against teams in the East (i.e. the West won more playing the East, than the East did playing the West).
+2) The bottom 4 playoff seeds in the West won nearly 60% of thier games against the top 4 teams in the East (i.e. the top contenders in the East wouldn't have gone far in the Western Conference playoffs).
+3) LeBron regualy won more than 50% of games against the entire Western Conference and just shy of 50% against the top 4 teams in the Western Conference playoffs (i.e. no matter which conference LeBron played in, he was contender).
 
+So we have to give Skip credit that he was right that LeBron had an advantage in reaching the finals 9 times by playing in the easier Eastern Conference. We could dive further into this but it seems pretty clear, if the definition of a "cake-walk" is the easier of the 2 paths to the finals, then LeBron "cake-walked" there 9 times and won 3 of those trips. :cake:
 ## So Why Did I Do this? 
 
 ## Data Sources
-![image 4 1 - lbj east top 4](https://github.com/user-attachments/assets/24c7a9a4-a084-449f-9d96-24e59905a1b3)
-
-
-![image 3 1 3 - lbj east conf](https://github.com/user-attachments/assets/93a92d27-5a10-441d-8b12-c5b5899bdf97)
+https://www.basketball-reference.com/  
+webscaping code provided in code write up
 
 
 
