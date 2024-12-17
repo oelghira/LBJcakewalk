@@ -7,7 +7,7 @@ It’s true that 2 things can be true at once. It’s true that LeBron James is 
 ## How To Translate A "Cake-Walk" Into Analytics We Can Measure :bar_chart:
 Skip never defines what he means by a "cake-walk" but we can interpret it as LeBron had an easier path to the finals by playing in the Eastern Conference instead of the Western Conference. Translating this into terms we can validate using statistics and data, an easier path to the finals would mean we would see these 3 measureable events:
   1) Teams in the Western Conference regularly beat teams in the Eastern Conference
-  2) Bottom seeded Western Conference playoff teams regularly beat top seeded Eastern Conference playoff teams 
+  2) Bottom seeded Western Conference playoff teams could beat top seeded Eastern Conference playoff teams 
   3) LeBron lost more to Western Conference playoff teams than Eastern Conference playoff teams
 
 ## A Brief List of LeBron's Career Accolades :trophy:
