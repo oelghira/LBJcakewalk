@@ -1,10 +1,8 @@
-# LBJcakewalk :cake:
+# Was Skip Bayless Right About LeBron's "Cake-Walk" Through the East?: A Data-Driven Analysis :cake:
 **So far, so good, but re word to focus on a cake walk. In my wording it sounds like this is analysis of skip's eye test and less about the cake walk**  
-If you've ever listed to Skip Bayless talk basketball, then you've heard Skip describe LeBron's first 9 trips to the NBA finals as a "cake-walk". I've listened to Skip's debates and analysis of players for years. I think I'm one of the few that willingly admit, I'm a fan of his. Skip turns people off. He's critical, cold, and calculated based off of what he calls his "eye test". You could easily say he's had a love-hate relationship with LeBron. As in, he's loved to hate on LeBron since before he ever dribbled a ball in the NBA. He might also have a love-hate relationship with LeBron's fans. His pet name for them is the "blind witnesses". But I've always wondered between Skip's eye test and the blind witnesses, which actually can't see the reality of LeBron's time in the East that lead him to 9 NBA finals appearances and 3 NBA championships? 
+It’s true that 2 things can be true at once. It’s true that LeBron James is a historically great talent on the basketball court. If you ask Skip Bayless, it’s also true that LeBron had a “cake-walk” through the Eastern Conference to reach his first 9 appearances in the NBA finals. I’ve listened to Skip talk “cake-walk” and LeBron James for years. I happened to love a great debate as much as a great basketball game. Skip has been critical of LeBron’s career since his first day as a professional. Skip is often critical, cold, and calculated based off what he calls his "eye test". The statistician in me has always wondered if Skip actually sees something we don’t in LeBron’s game. I’ve always wondered how does Skip see a “cake-walk” instead of pure greatness? In this analysis, I want to translate a “cake-walk” into analytical terms and put his hypothesis to the test and set the record straight on the “cake-walk” talk.  
 
-In this analysis, I will show the statistics behind LeBron's career in the Eastern Conference, so we can finally answer who really can't see the truth, Skip Bayless or the "blind witnesses". 
-
-**Spoiler: as the title reads....**
+**Spoiler Alert: Skip has a point to make about LeBron’s trips to the Finals in the East.**  
 
 ## How To Translate A "Cake-Walk" Into Analytics We Can Measure :bar_chart:
 Skip never defines what he means by a "cake-walk" but we can interpret it as LeBron had an easier path to the finals by playing in the Eastern Conference instead of the Western Conference. Translating this into terms we can validate using statistics and data, an easier path to the finals would mean we would see these 3 measureable events:
@@ -60,7 +58,8 @@ After taking a deep dive look into this we can conclude that in LeBron's 15 year
 2) The bottom 4 playoff seeds in the West won nearly 60% of thier games against the top 4 teams in the East (i.e. the top contenders in the East wouldn't have gone far in the Western Conference playoffs).
 3) LeBron regualy won more than 50% of games against the entire Western Conference and just shy of 50% against the top 4 teams in the Western Conference playoffs (i.e. no matter which conference LeBron played in, he was contender).
 
-So we have to give Skip credit that he was right that LeBron had an advantage in reaching the finals 9 times by playing in the easier Eastern Conference. We could dive further into this but it seems pretty clear, if the definition of a "cake-walk" is the easier of the 2 paths to the finals, then LeBron "cake-walked" there 9 times and won 3 of those trips. :cake:
+So we have to give Skip credit that he was right that LeBron had an advantage in reaching the finals 9 times by playing in the easier Eastern Conference. We could dive further into this but it seems pretty clear, if the definition of a "cake-walk" is the easier of the 2 paths to the finals, then LeBron "cake-walked" there 9 times and won 3 of those trips. :cake:  
+
 ## So Why Did I Do this? 
 
 ## Data Sources
