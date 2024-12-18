@@ -1,0 +1,859 @@
+library(rvest)
+library(dplyr)
+library(stringr)
+library(purrr)
+library(httr2)
+library(lubridate)
+library(ggplot2)
+
+# begin webscraping of data
+yrs <- 2004:2018
+season_templ <- "https://www.basketball-reference.com/leagues/NBA_{y}_games.html"
+
+schedule_urls <-
+  yrs |>
+  set_names() |>
+  map(\(y) str_glue(season_templ)) |>
+  # create (and call) slow version of read_html, no more than 20 requests/min, 3s delay between requests
+  map(\(url_) slowly(read_html, rate = rate_delay(pause = 60/20))(url_) |> html_elements("div.filter a") |> html_attr("href"))
+
+head(schedule_urls) |> str()
+
+req_base <-
+  request("https://www.basketball-reference.com/") |>
+  req_throttle(20/60)
+
+results <-
+  schedule_urls |>
+  unlist() |>
+  # prepare list of requests
+  map(req_url_path, req = req_base) |>
+  # perform all prepared requests sequentially
+  req_perform_sequential() |>
+  # filter successes
+  resps_successes() |>
+  # extract tables from all monthly schedule pages, bind to a single tibble
+  resps_data(\(resp) resp_body_html(resp) |> html_element("table") |> html_table(convert = FALSE))
+
+head(results)
+# End Webscraping
+
+# Begin Data Cleaning
+colnames(results)[3] = "Visitor"
+colnames(results)[4] = "PTS_V"
+colnames(results)[5] = "Home"
+colnames(results)[6] = "PTS_H"
+colnames(results)[9] = "Attendance"
+
+results = results[,c(1,3,4,5,6)]
+
+results = results[-which(results$Date == "Playoffs"),]
+
+teams = unique(c(unique(results$Home),unique(results$Visitor)))
+teams = sort(teams)
+conference = c("E","E","E","E","E","E","E","W","W","E","W","W","E","W","W","W","E","E","W","E","W","W","W","E","W","E","E","W","W","W",	"W","W","E","W","E")
+
+team = as.data.frame(matrix(NA,nrow = 35, ncol = 2))
+team$V1 = teams
+team$V2 = conference
+colnames(team) = c("team","conference")
+
+results = results %>% inner_join(team,  by = c("Visitor" = "team"))
+colnames(results)[6] = "visitor_conf"
+
+results = results %>% inner_join(team,  by = c("Home" = "team"))
+colnames(results)[7] = "home_conf"
+
+
+results$Date = substr(results$Date,6,nchar(results$Date))
+results$Date = lubridate::ymd(paste(
+  substr(results$Date, nchar(results$Date) - 4 + 1, nchar(results$Date)),
+  substr(results$Date, 1, 3),
+  gsub(".*\\s([^,]+),.*", "\\1", results$Date
+), sep = "-"))
+
+results$PTS_V = as.numeric(results$PTS_V)
+results$PTS_H = as.numeric(results$PTS_H)
+results$visitor_conf = as.factor(results$visitor_conf)
+results$home_conf = as.factor(results$home_conf)
+
+
+lbj_team = as.data.frame(matrix(NA,nrow = 3, ncol = 3))
+colnames(lbj_team) = c("team","start_dt","end_dt")
+lbj_team$team = c("Cleveland Cavaliers","Miami Heat","Cleveland Cavaliers")
+lbj_team$start_dt = c("2003-10-29","2010-10-26","2014-10-30")
+lbj_team$end_dt = c("2010-04-14","2014-04-16","2018-04-11")
+lbj_team$start_dt = as.Date(lbj_team$start_dt)
+lbj_team$end_dt = as.Date(lbj_team$end_dt)
+
+lbj_team2 = as.data.frame(matrix(NA,nrow = 15, ncol = 4))
+colnames(lbj_team2) = c("team","start_dt","end_dt","szn")
+lbj_team2$team = c(rep("Cleveland Cavaliers",7),rep("Miami Heat",4),rep("Cleveland Cavaliers",4))
+lbj_team2$start_dt = c(rep("2003-10-29",7),rep("2010-10-26",4),rep("2014-10-30",4))
+lbj_team2$end_dt = c(rep("2010-04-14",7),rep("2014-04-16",4),rep("2018-04-11",4))
+lbj_team2$szn = c(2004:2018)
+lbj_team2$start_dt = as.Date(lbj_team2$start_dt)
+lbj_team2$end_dt = as.Date(lbj_team2$end_dt)
+
+results$lbj_team = NA
+results$lbj_team[which(results$Visitor == lbj_team[1,1] & results$Date >= lbj_team[1,2] & results$Date <= lbj_team[1,3])] = 1
+results$lbj_team[which(results$Visitor == lbj_team[2,1] & results$Date >= lbj_team[2,2] & results$Date <= lbj_team[2,3])] = 1
+results$lbj_team[which(results$Visitor == lbj_team[3,1] & results$Date >= lbj_team[3,2] & results$Date <= lbj_team[3,3])] = 1
+results$lbj_team[which(results$Home == lbj_team[1,1] & results$Date >= lbj_team[1,2] & results$Date <= lbj_team[1,3])] = 1
+results$lbj_team[which(results$Home == lbj_team[2,1] & results$Date >= lbj_team[2,2] & results$Date <= lbj_team[2,3])] = 1
+results$lbj_team[which(results$Home == lbj_team[3,1] & results$Date >= lbj_team[3,2] & results$Date <= lbj_team[3,3])] = 1
+results$lbj_team[which(is.na(results$lbj_team))] = 0
+
+szns = as.data.frame(matrix(NA,nrow = 15,ncol=3))
+colnames(szns) = c("szn","start","end")
+szns$szn = c(2004:2018)
+szns$start = c("2003-10-28","2004-11-02","2005-11-01","2006-10-31","2007-10-30","2008-10-28","2009-10-27","2010-10-26","2011-12-25","2012-10-30","2013-10-29","2014-10-28","2015-10-27","2016-10-25","2017-10-17")
+szns$end = c("2004-04-14","2005-04-20","2006-04-19","2007-04-18","2008-04-16","2009-04-15","2010-04-14","2011-04-13","2012-04-26","2013-04-17","2014-04-16","2015-04-15","2016-04-13","2017-04-12","2018-04-11")
+szns$start = as.Date(szns$start)
+szns$end = as.Date(szns$end)
+
+# cleaning data to only regular season data
+i = 1
+j = 1
+while(i <= nrow(results)){
+if(j < nrow(szns)){
+  if(results$Date[i] > szns$end[j] & results$Date[i] < szns$start[j+1]){
+    results = results[-i,]
+    i = i - 1
+  }
+}
+
+if(j < nrow(szns)){
+  if(results$Date[i] == szns$start[j+1]){
+  j = j + 1
+  }
+}
+
+if(j == nrow(szns)){
+  if(results$Date[i] > szns$end[j]){
+    results = results[-i,]
+    i = i - 1
+  }
+}
+
+  i = i + 1
+  print(i)
+}
+
+results$szn = NA
+i = 1
+j = 1
+while(i <= nrow(results)){
+if(j < nrow(szns)){
+  if(results$Date[i] >= szns$start[j+1] & j+1 <= nrow(szns)){
+    j = j + 1
+  }
+}
+  print(i)
+  results$szn[i] = szns$szn[j]
+  i = i + 1
+
+}
+
+# DATA IS ACCURATE
+# EACH SEASON HAS 2460 GAMES TOTAL WITH THE EXCEPTIONS OF THE
+# 2004 SZN - ONLY 29 TEAMS, CHARLOTTE WAS GIVEN A TEAM IN THE 2005 SZN
+# 2012 SZN - SHORTENED DUE TO LOCKOUT
+# 2013 SZN - PACERS BOSTON GAME CANCELED DUE TO BOSTON MARATHON BOMBING
+# Begin Data Cleaning
+
+
+# Begin Creating Visuals
+# east and west win percentage by year 
+a = results %>% 
+  filter(visitor_conf == "E" & home_conf == "W") %>%
+  group_by(szn) %>%
+  summarise(
+    games = n()
+    ,E_Wins = sum(ifelse(PTS_V > PTS_H, 1, 0))
+    ,E_Losses = sum(ifelse(PTS_V < PTS_H, 1, 0))
+  )
+
+b = results %>% 
+  filter(visitor_conf == "W" & home_conf == "E") %>%
+  group_by(szn) %>%
+  summarise(
+    games = n()
+    ,E_Wins = sum(ifelse(PTS_V < PTS_H, 1, 0))
+    ,E_Losses = sum(ifelse(PTS_V > PTS_H, 1, 0))
+  )
+
+c = rbind(a,b)
+
+c = c %>% group_by(szn) %>%
+  summarise(
+    games = sum(games)
+    ,E_Wins = sum(E_Wins)
+    ,E_Losses = sum(E_Losses)
+  )
+
+c = as.data.frame(c)
+which(c$E_Wins>c$E_Losses)
+c$E_Win_pct = round(c$E_Wins/c$games,2)
+c$W_Win_pct = 1-c$E_Win_pct
+# in games of east vs west the west wins a more than 50% of games each season except 1 
+
+library(reshape2)
+melt(c,id.vars = "szn",measure.vars = c("E_Win_pct","W_Win_pct"))
+
+p1 = ggplot(melt(c,id.vars = "szn",measure.vars = c("E_Win_pct","W_Win_pct")),
+            aes(fill=variable,y=value,x=szn))+
+  geom_bar(position = "stack",stat = "identity")+
+  scale_fill_manual(values=c("#17408b", "#c9082a"),
+                    labels = c("E_Win_pct" = "Eastern Conf.", "W_Win_pct" = "Western Conf."))+
+  geom_text(aes(label=paste0( (100*value),"%")),
+            position=position_stack(vjust=0.5), colour="white", size = 4)+
+  scale_x_continuous(breaks = 2004:2018)+
+  geom_hline(yintercept = 0.5, color = "White", linetype = "dotted", linewidth = 1) +
+  scale_y_continuous(labels = NULL)+
+  ylab("")+
+  xlab("SZN*")+
+  coord_flip()+
+  # ggtitle("Western Conference VS Eastern Conference Win Percentage")+
+  labs(
+    title = "Western Conference VS Eastern Conference Win Percentage",        # Main title
+    caption = "*SZN = year the championship was won"  # Subtext (caption)
+  )+
+  theme(
+    legend.position = "bottom"
+    ,legend.text = element_text(size = 12)
+    ,legend.title = element_text(color = "White")
+    ,legend.direction = "vertical"
+    ,axis.title.y = element_text(size = 14, face = "bold.italic")
+    ,axis.text.y = element_text(size = 12, face = "bold")
+    ,title = element_text(size = 14, face = "bold.italic")
+    ,plot.caption = element_text(size = 11, hjust = 0.0,face = "italic")  # Style the caption
+  )
+p1
+
+
+# lbj's win percentage against east and west by year 
+# lbj against west
+a1 = results %>% 
+  filter(lbj_team == 1) %>%
+  filter(visitor_conf  != home_conf) %>%
+  filter(visitor_conf  == "E") %>%
+  group_by(szn) %>%
+  summarise(
+    games = n()
+    ,lbj_Wins = sum(ifelse(PTS_V > PTS_H, 1, 0))
+    ,lbj_Losses = sum(ifelse(PTS_V < PTS_H, 1, 0))
+  )
+
+b1 = results %>% 
+  filter(lbj_team == 1) %>%
+  filter(visitor_conf  != home_conf) %>%
+  filter(home_conf  == "E") %>%
+  group_by(szn) %>%
+  summarise(
+    games = n()
+    ,lbj_Wins = sum(ifelse(PTS_V < PTS_H, 1, 0))
+    ,lbj_Losses = sum(ifelse(PTS_V > PTS_H, 1, 0))
+  )
+
+c1 = rbind(a1,b1)
+c1 = c1  %>% group_by(szn) %>%
+  summarise(
+    games = sum(games)
+    ,lbj_Wins = sum(lbj_Wins)
+    ,lbj_Losses = sum(lbj_Losses)
+  )
+c1$lbj_Win_Pct_v_W = round(c1$lbj_Wins/c1$games,2)
+c1$lbj_Loss_Pct_v_W = 1 - c1$lbj_Win_Pct_v_W
+
+
+library(reshape2)
+melt(c1,id.vars = "szn",measure.vars = c("lbj_Win_Pct_v_W","lbj_Loss_Pct_v_W"))
+
+p2 = ggplot(melt(c1,id.vars = "szn",measure.vars = c("lbj_Win_Pct_v_W","lbj_Loss_Pct_v_W")),
+            aes(fill=variable,y=value,x=szn))+
+  geom_bar(position = "stack",stat = "identity")+
+  # scale_fill_manual(values=c("#00b200", "#000000"),
+  scale_fill_manual(values=c("#00b200", "#c9082a"),                  
+                    labels = c("lbj_Win_Pct_v_W" = "LBJ's Win % vs West", "lbj_Loss_Pct_v_W" = "LBJ's Loss % vs West"))+
+  geom_text(aes(label=paste0( (100*value),"%")),
+            position=position_stack(vjust=0.5), colour="white", size = 4)+
+  scale_x_continuous(breaks = 2004:2018)+
+  geom_hline(yintercept = 0.5, color = "White", linetype = "dotted", size = 1) +
+  scale_y_continuous(labels = NULL)+
+  ylab("")+
+  xlab("SZN")+
+  coord_flip()+
+  # ggtitle("LeBron's Win Percentage Against Western Conference")+
+  labs(
+    title = "LeBron's Win Percentage Against Western Conference",        # Main title
+    caption = "*SZN = year the championship was won"  # Subtext (caption)
+  )+
+  theme(
+    legend.position = "bottom"
+    ,legend.text = element_text(size = 12)
+    ,legend.title = element_text(color = "White")
+    ,legend.direction = "vertical"
+    ,axis.title.y = element_text(size = 14, face = "bold.italic")
+    ,axis.text.y = element_text(size = 12, face = "bold")
+    ,title = element_text(size = 14, face = "bold.italic")
+    ,plot.caption = element_text(size = 11, hjust = 0.0,face = "italic")  # Style the caption
+  )
+p2
+
+
+
+
+# lbj against east
+# this is more difficult bc i need to identify which team lbj is on home or visitor....
+a2.1 = results %>% 
+  filter(lbj_team == 1) %>%
+  filter(visitor_conf  == home_conf) %>%
+  filter(szn %in% c(2004:2010,2015:2018)) %>%
+  filter(Visitor == "Cleveland Cavaliers") %>%
+  group_by(szn) %>%
+  summarise(
+    games = n()
+    ,lbj_Wins = sum(ifelse(PTS_V > PTS_H, 1, 0))
+    ,lbj_Losses = sum(ifelse(PTS_V < PTS_H, 1, 0))
+  )
+
+a2.2 = results %>% 
+  filter(lbj_team == 1) %>%
+  filter(visitor_conf  == home_conf) %>%
+  filter(szn %in% c(2004:2010,2015:2018)) %>%
+  filter(Home == "Cleveland Cavaliers") %>%
+  group_by(szn) %>%
+  summarise(
+    games = n()
+    ,lbj_Wins = sum(ifelse(PTS_V < PTS_H, 1, 0))
+    ,lbj_Losses = sum(ifelse(PTS_V > PTS_H, 1, 0))
+  )
+
+b2.1 = results %>% 
+  filter(lbj_team == 1) %>%
+  filter(visitor_conf  == home_conf) %>%
+  filter(szn %in% c(2011:2014)) %>%
+  filter(Home == "Miami Heat") %>%
+  group_by(szn) %>%
+  summarise(
+    games = n()
+    ,lbj_Wins = sum(ifelse(PTS_V < PTS_H, 1, 0))
+    ,lbj_Losses = sum(ifelse(PTS_V > PTS_H, 1, 0))
+  )
+
+b2.2 = results %>% 
+  filter(lbj_team == 1) %>%
+  filter(visitor_conf  == home_conf) %>%
+  filter(szn %in% c(2011:2014)) %>%
+  filter(Visitor == "Miami Heat") %>%
+  group_by(szn) %>%
+  summarise(
+    games = n()
+    ,lbj_Wins = sum(ifelse(PTS_V > PTS_H, 1, 0))
+    ,lbj_Losses = sum(ifelse(PTS_V < PTS_H, 1, 0))
+  )
+
+
+
+
+c2 = rbind(a2.1,a2.2,b2.1,b2.2)
+c2 = c2  %>% group_by(szn) %>%
+  summarise(
+    games = sum(games)
+    ,lbj_Wins = sum(lbj_Wins)
+    ,lbj_Losses = sum(lbj_Losses)
+  )
+c2$lbj_Win_Pct_v_E = round(c2$lbj_Wins/c2$games,2)
+c2$lbj_Loss_Pct_v_E = 1 - c2$lbj_Win_Pct_v_E
+
+library(reshape2)
+melt(c2,id.vars = "szn",measure.vars = c("lbj_Win_Pct_v_E","lbj_Loss_Pct_v_E"))
+
+p3 = ggplot(melt(c2,id.vars = "szn",measure.vars = c("lbj_Win_Pct_v_E","lbj_Loss_Pct_v_E")),
+            aes(fill=variable,y=value,x=szn))+
+  geom_bar(position = "stack",stat = "identity")+
+  # scale_fill_manual(values=c("#00b200", "#000000"),
+  scale_fill_manual(values=c("#00b200", "#17408b"),                 
+                    labels = c("lbj_Win_Pct_v_E" = "LBJ's Win % vs East", "lbj_Loss_Pct_v_E" = "LBJ's Loss % vs East"))+
+  geom_text(aes(label=paste0( (100*value),"%")),
+            position=position_stack(vjust=0.5), colour="white", size = 4)+
+  scale_x_continuous(breaks = 2004:2018)+
+  geom_hline(yintercept = 0.5, color = "White", linetype = "dotted", size = 1) +
+  scale_y_continuous(labels = NULL)+
+  ylab("")+
+  xlab("SZN")+
+  coord_flip()+
+  # ggtitle("LeBron's Win Percentage Against Eastern Conference")+
+  labs(
+    title = "LeBron's Win Percentage Against Eastern Conference",        # Main title
+    caption = "*SZN = year the championship was won"  # Subtext (caption)
+  )+
+  theme(
+    legend.position = "bottom"
+    ,legend.text = element_text(size = 12)
+    ,legend.title = element_text(color = "White")
+    ,legend.direction = "vertical"
+    ,axis.title.y = element_text(size = 14, face = "bold.italic")
+    ,axis.text.y = element_text(size = 12, face = "bold")
+    ,title = element_text(size = 14, face = "bold.italic")
+    ,plot.caption = element_text(size = 11, hjust = 0.0,face = "italic")  # Style the caption
+  )
+p3
+
+gridExtra::grid.arrange(p2,p3,nrow=1)
+p1
+
+
+# need playoff data now! was not able to webscrape in the moment but the data can be easily copied and formated in excel from
+# https://www.basketball-reference.com/playoffs/series.html
+# data should be formatted in the following way
+# szn	team	seed	conf	champ
+# 2004	Indiana Pacers	1	E	0
+# 2004	New Jersey Nets	2	E	0
+# 2004	Detroit Pistons	3	E	1
+# 2004	Miami Heat	4	E	0
+# ...
+# 2018	Utah Jazz	5	W	0
+# 2018	New Orleans Pelicans	6	W	0
+# 2018	San Antonio Spurs	7	W	0
+# 2018	Minnesota Timberwolves	8	W	0
+
+seeds = read.csv("add in saved source of playoff data")
+seeds$conf = as.factor(seeds$conf)
+seeds = seeds[,-4]
+
+results = results %>% left_join(seeds, by = c("szn" = "szn", "Visitor"="team"))
+names(results)[names(results) == "seed"] = "visitor_seed"
+names(results)[names(results) == "champ"] = "visitor_champ"
+
+results = results %>% left_join(seeds, by = c("szn" = "szn", "Home"="team"))
+names(results)[names(results) == "seed"] = "home_seed"
+names(results)[names(results) == "champ"] = "home_champ"
+results$visitor_champ = coalesce(results$visitor_champ,0)
+results$home_champ = coalesce(results$home_champ,0)
+results$visitor_seed = coalesce(results$visitor_seed,0)
+results$home_seed = coalesce(results$home_seed,0)
+
+head(results)
+
+# east playoff teams vs west playoff teams win percentage by year 
+a3 = results %>% 
+  filter(visitor_conf == "E" & home_conf == "W") %>%
+  filter(visitor_seed > 0 & home_seed > 0) %>% 
+  group_by(szn) %>%
+  summarise(
+    games = n()
+    ,E_Wins = sum(ifelse(PTS_V > PTS_H, 1, 0))
+    ,E_Losses = sum(ifelse(PTS_V < PTS_H, 1, 0))
+  )
+
+b3 = results %>% 
+  filter(visitor_conf == "W" & home_conf == "E") %>%
+  filter(visitor_seed > 0 & home_seed > 0) %>% 
+  group_by(szn) %>%
+  summarise(
+    games = n()
+    ,E_Wins = sum(ifelse(PTS_V < PTS_H, 1, 0))
+    ,E_Losses = sum(ifelse(PTS_V > PTS_H, 1, 0))
+  )
+
+c3 = rbind(a3,b3)
+
+c3 = c3 %>% group_by(szn) %>%
+  summarise(
+    games = sum(games)
+    ,E_Wins = sum(E_Wins)
+    ,E_Losses = sum(E_Losses)
+  )
+
+c3 = as.data.frame(c3)
+c3$E_Win_pct = round(c3$E_Wins/c3$games,2)
+c3$W_Win_pct = 1-c3$E_Win_pct
+
+p4 = ggplot(melt(c3,id.vars = "szn",measure.vars = c("E_Win_pct","W_Win_pct")),
+            aes(fill=variable,y=value,x=szn))+
+  geom_bar(position = "stack",stat = "identity")+
+  scale_fill_manual(values=c("#17408b", "#c9082a"),
+                    labels = c("E_Win_pct" = "Eastern Conf.", "W_Win_pct" = "Western Conf."))+
+  geom_text(aes(label=paste0( (100*value),"%")),
+            position=position_stack(vjust=0.5), colour="white", size = 4)+
+  scale_x_continuous(breaks = 2004:2018)+
+  geom_hline(yintercept = 0.5, color = "White", linetype = "dotted", linewidth = 1) +
+  scale_y_continuous(labels = NULL)+
+  ylab("")+
+  xlab("SZN")+
+  coord_flip()+
+  # ggtitle("Eastern Confernce Playoff Teams VS Western Conference Playoff Teams Win Percentage")+
+  labs(
+    title = "Western Playoff Teams VS Eastern Playoff Teams Win Percentage",        # Main title
+    caption = "*SZN = year the championship was won"  # Subtext (caption)
+  )+
+  theme(
+    legend.position = "bottom"
+    ,legend.text = element_text(size = 12)
+    ,legend.title = element_text(color = "White")
+    ,legend.direction = "vertical"
+    ,axis.title.y = element_text(size = 14, face = "bold.italic")
+    ,axis.text.y = element_text(size = 12, face = "bold")
+    ,title = element_text(size = 14, face = "bold.italic")
+    ,plot.caption = element_text(size = 11, hjust = 0.0,face = "italic")  # Style the caption
+  )
+p4
+
+
+# east playoff seeds 1-4 vs west playoff seeds 5-8 win percentage by year 
+a4 = results %>% 
+  filter(visitor_conf == "E" & home_conf == "W") %>%
+  filter(visitor_seed >= 4 & home_seed %in% c(5:8)) %>% 
+  group_by(szn) %>%
+  summarise(
+    games = n()
+    ,E_Wins = sum(ifelse(PTS_V > PTS_H, 1, 0))
+    ,E_Losses = sum(ifelse(PTS_V < PTS_H, 1, 0))
+  )
+
+b4 = results %>% 
+  filter(visitor_conf == "W" & home_conf == "E") %>%
+  filter(visitor_seed %in% c(5:8) & home_seed >= 4) %>% 
+  group_by(szn) %>%
+  summarise(
+    games = n()
+    ,E_Wins = sum(ifelse(PTS_V < PTS_H, 1, 0))
+    ,E_Losses = sum(ifelse(PTS_V > PTS_H, 1, 0))
+  )
+
+c4 = rbind(a4,b4)
+
+c4 = c4 %>% group_by(szn) %>%
+  summarise(
+    games = sum(games)
+    ,E_Wins = sum(E_Wins)
+    ,E_Losses = sum(E_Losses)
+  )
+
+c4 = as.data.frame(c4)
+c4$E_Win_pct = round(c4$E_Wins/c4$games,2)
+c4$W_Win_pct = 1-c4$E_Win_pct
+
+p5 = ggplot(melt(c4,id.vars = "szn",measure.vars = c("E_Win_pct","W_Win_pct")),
+            aes(fill=variable,y=value,x=szn))+
+  geom_bar(position = "stack",stat = "identity")+
+  scale_fill_manual(values=c("#17408b", "#c9082a"),
+                    labels = c("E_Win_pct" = "Eastern Conf Seeds 1,2,3,4", "W_Win_pct" = "Western Conf Seeds 5,6,7,8"))+
+  geom_text(aes(label=paste0( (100*value),"%")),
+            position=position_stack(vjust=0.5), colour="white", size = 4)+
+  scale_x_continuous(breaks = 2004:2018)+
+  geom_hline(yintercept = 0.5, color = "White", linetype = "dotted", linewidth = 1) +
+  scale_y_continuous(labels = NULL)+
+  ylab("")+
+  xlab("SZN")+
+  coord_flip()+
+  # ggtitle("Eastern Playoff Top 4 Seeds VS Western Playoff Bottom 4 Seeds Win Percentage")+
+  labs(
+    title = "Western Playoff Seeds 4 - 8 VS Eastern Playoff Seeds 1 - 4 Win Percentage",  # Main title
+    caption = "*SZN = year the championship was won"  # Subtext (caption)
+  )+
+  theme(
+    legend.position = "bottom"
+    ,legend.text = element_text(size = 12)
+    ,legend.title = element_text(color = "White")
+    ,legend.direction = "vertical"
+    ,axis.title.y = element_text(size = 14, face = "bold.italic")
+    ,axis.text.y = element_text(size = 12, face = "bold")
+    ,title = element_text(size = 14, face = "bold.italic")
+    ,plot.caption = element_text(size = 11, hjust = 0.0,face = "italic")  # Style the caption
+  )
+p5
+
+
+
+# lbj's win percentage against east and west by year 
+# lbj against west top 4 seeds
+a5 = results %>% 
+  filter(lbj_team == 1) %>%
+  filter(visitor_conf  != home_conf) %>%
+  filter(visitor_conf  == "E") %>%
+  filter(home_seed %in% c(1:4)) %>%
+  group_by(szn) %>%
+  summarise(
+    games = n()
+    ,lbj_Wins = sum(ifelse(PTS_V > PTS_H, 1, 0))
+    ,lbj_Losses = sum(ifelse(PTS_V < PTS_H, 1, 0))
+  )
+
+b5 = results %>% 
+  filter(lbj_team == 1) %>%
+  filter(visitor_conf  != home_conf) %>%
+  filter(home_conf  == "E") %>%
+  filter(visitor_seed %in% c(1:4)) %>%
+  group_by(szn) %>%
+  summarise(
+    games = n()
+    ,lbj_Wins = sum(ifelse(PTS_V < PTS_H, 1, 0))
+    ,lbj_Losses = sum(ifelse(PTS_V > PTS_H, 1, 0))
+  )
+
+c5 = rbind(a5,b5)
+c5 = c5  %>% group_by(szn) %>%
+  summarise(
+    games = sum(games)
+    ,lbj_Wins = sum(lbj_Wins)
+    ,lbj_Losses = sum(lbj_Losses)
+  )
+c5$lbj_Win_Pct_v_W = round(c5$lbj_Wins/c5$games,2)
+c5$lbj_Loss_Pct_v_W = 1 - c5$lbj_Win_Pct_v_W
+
+
+library(reshape2)
+melt(c5,id.vars = "szn",measure.vars = c("lbj_Win_Pct_v_W","lbj_Loss_Pct_v_W"))
+
+p6 = ggplot(melt(c5,id.vars = "szn",measure.vars = c("lbj_Win_Pct_v_W","lbj_Loss_Pct_v_W")),
+            aes(fill=variable,y=value,x=szn))+
+  geom_bar(position = "stack",stat = "identity")+
+  # scale_fill_manual(values=c("#00b200", "#000000"),
+  scale_fill_manual(values=c("#00b200", "#c9082a"),                  
+                    labels = c("lbj_Win_Pct_v_W" = "LBJ's Win % vs West Top 4 Seeds", "lbj_Loss_Pct_v_W" = "LBJ's Loss % vs West Top 4 Seeds"))+
+  geom_text(aes(label=paste0( (100*value),"%")),
+            position=position_stack(vjust=0.5), colour="white", size = 4)+
+  scale_x_continuous(breaks = 2004:2018)+
+  geom_hline(yintercept = 0.5, color = "White", linetype = "dotted", size = 1) +
+  scale_y_continuous(labels = NULL)+
+  ylab("")+
+  xlab("SZN")+
+  coord_flip()+
+  # ggtitle("LeBron's Win Percentage Against Western Top 4 Seeds")+
+  labs(
+    title = "LeBron's Win Percentage Against Western Top 4 Seeds",  # Main title
+    caption = "*SZN = year the championship was won"  # Subtext (caption)
+  )+
+  theme(
+    legend.position = "bottom"
+    ,legend.text = element_text(size = 12)
+    ,legend.title = element_text(color = "White")
+    ,legend.direction = "vertical" 
+    ,title = element_text(size = 14, face = "bold.italic")
+    ,plot.caption = element_text(size = 11, hjust = 0.0,face = "italic")  # Style the caption
+  )
+p6
+
+
+# lbj against east
+# this is more difficult bc i need to identify which team lbj is on home or visitor....
+a6.1 = results %>% 
+  filter(lbj_team == 1) %>%
+  filter(visitor_conf  == home_conf) %>%
+  filter(szn %in% c(2004:2010,2015:2018)) %>%
+  filter(Visitor == "Cleveland Cavaliers") %>%
+  filter(home_seed %in% c(1:4)) %>%
+  group_by(szn) %>%
+  summarise(
+    games = n()
+    ,lbj_Wins = sum(ifelse(PTS_V > PTS_H, 1, 0))
+    ,lbj_Losses = sum(ifelse(PTS_V < PTS_H, 1, 0))
+  )
+
+a6.2 = results %>% 
+  filter(lbj_team == 1) %>%
+  filter(visitor_conf  == home_conf) %>%
+  filter(szn %in% c(2004:2010,2015:2018)) %>%
+  filter(Home == "Cleveland Cavaliers") %>%
+  filter(visitor_seed %in% c(1:4)) %>%
+  group_by(szn) %>%
+  summarise(
+    games = n()
+    ,lbj_Wins = sum(ifelse(PTS_V < PTS_H, 1, 0))
+    ,lbj_Losses = sum(ifelse(PTS_V > PTS_H, 1, 0))
+  )
+
+b6.1 = results %>% 
+  filter(lbj_team == 1) %>%
+  filter(visitor_conf  == home_conf) %>%
+  filter(szn %in% c(2011:2014)) %>%
+  filter(Home == "Miami Heat") %>%
+  filter(visitor_seed %in% c(1:4)) %>%
+  group_by(szn) %>%
+  summarise(
+    games = n()
+    ,lbj_Wins = sum(ifelse(PTS_V < PTS_H, 1, 0))
+    ,lbj_Losses = sum(ifelse(PTS_V > PTS_H, 1, 0))
+  )
+
+b6.2 = results %>% 
+  filter(lbj_team == 1) %>%
+  filter(visitor_conf  == home_conf) %>%
+  filter(szn %in% c(2011:2014)) %>%
+  filter(Visitor == "Miami Heat") %>%
+  filter(home_seed %in% c(1:4)) %>%
+  group_by(szn) %>%
+  summarise(
+    games = n()
+    ,lbj_Wins = sum(ifelse(PTS_V > PTS_H, 1, 0))
+    ,lbj_Losses = sum(ifelse(PTS_V < PTS_H, 1, 0))
+  )
+
+c6 = rbind(a6.1,a6.2,b6.1,b6.2)
+c6 = c6  %>% group_by(szn) %>%
+  summarise(
+    games = sum(games)
+    ,lbj_Wins = sum(lbj_Wins)
+    ,lbj_Losses = sum(lbj_Losses)
+  )
+c6$lbj_Win_Pct_v_E = round(c6$lbj_Wins/c6$games,2)
+c6$lbj_Loss_Pct_v_E = 1 - c6$lbj_Win_Pct_v_E
+
+library(reshape2)
+melt(c6,id.vars = "szn",measure.vars = c("lbj_Win_Pct_v_E","lbj_Loss_Pct_v_E"))
+
+p7 = ggplot(melt(c6,id.vars = "szn",measure.vars = c("lbj_Win_Pct_v_E","lbj_Loss_Pct_v_E")),
+            aes(fill=variable,y=value,x=szn))+
+  geom_bar(position = "stack",stat = "identity")+
+  # scale_fill_manual(values=c("#00b200", "#000000"),
+  scale_fill_manual(values=c("#00b200", "#17408b"),  
+                    labels = c("lbj_Win_Pct_v_E" = "LBJ's Win % vs East Top 4 Seeds", "lbj_Loss_Pct_v_E" = "LBJ's Loss % vs East Top 4 Seeds"))+
+  geom_text(aes(label=paste0( (100*value),"%")),
+            position=position_stack(vjust=0.5), colour="white", size = 4)+
+  scale_x_continuous(breaks = 2004:2018)+
+  geom_hline(yintercept = 0.5, color = "White", linetype = "dotted", size = 1) +
+  scale_y_continuous(labels = NULL)+
+  ylab("")+
+  xlab("SZN")+
+  coord_flip()+
+  ggtitle("LeBron's Win Percentage Against Eastern Top 4 Seeds")+
+  theme(legend.position = "bottom"
+        ,legend.text = element_text(size = 12)
+        ,legend.title = element_text(color = "White")
+        ,legend.direction = "vertical" 
+        ,title = element_text(size = 14, face = "bold.italic")
+        ,plot.caption = element_text(size = 11, hjust = 0.0,face = "italic")  # Style the caption
+  )
+p7
+
+gridExtra::grid.arrange(p6,p7,nrow = 1)
+
+# eastern conf champ at home against top 4 in west
+a7.1 = results %>% 
+  filter(home_champ == 1) %>%
+  filter(home_conf == "E") %>%
+  filter(visitor_conf  != home_conf) %>%
+  filter(visitor_seed %in% c(1:4)) %>%
+  group_by(szn, Home) %>%
+  summarise(
+    games = n()
+    ,champ_Wins = sum(ifelse(PTS_V < PTS_H, 1, 0))
+    ,champ_Losses = sum(ifelse(PTS_V > PTS_H, 1, 0))
+  )
+a7.1 = a7.1 %>% rename(champ = Home)
+# eastern conf champ as visitor against top 4 in west
+a7.2 = results %>% 
+  filter(visitor_champ == 1) %>%
+  filter(visitor_conf == "E") %>%
+  filter(visitor_conf  != home_conf) %>%
+  filter(home_seed %in% c(1:4)) %>%
+  group_by(szn, Visitor) %>%
+  summarise(
+    games = n()
+    ,champ_Wins = sum(ifelse(PTS_V > PTS_H, 1, 0))
+    ,champ_Losses = sum(ifelse(PTS_V < PTS_H, 1, 0))
+  ) 
+a7.2 = a7.2 %>% rename(champ = Visitor)
+
+# western conf champ at home against top 4 in west
+b7.1 = results %>% 
+  filter(home_champ == 1) %>%
+  filter(home_conf == "W") %>%
+  filter(visitor_conf  == home_conf) %>%
+  filter(visitor_seed %in% c(1:4)) %>%
+  group_by(szn,Home) %>%
+  summarise(
+    games = n()
+    ,champ_Wins = sum(ifelse(PTS_V < PTS_H, 1, 0))
+    ,champ_Losses = sum(ifelse(PTS_V > PTS_H, 1, 0))
+  )
+b7.1 = b7.1 %>% rename(champ = Home)
+
+# western conf champ as visitor against top 4 in west
+b7.2 = results %>% 
+  filter(visitor_champ == 1) %>%
+  filter(visitor_conf == "W") %>%
+  filter(visitor_conf  == home_conf) %>%
+  filter(home_seed %in% c(1:4)) %>%
+  group_by(szn, Visitor) %>%
+  summarise(
+    games = n()
+    ,champ_Wins = sum(ifelse(PTS_V > PTS_H, 1, 0))
+    ,champ_Losses = sum(ifelse(PTS_V < PTS_H, 1, 0))
+  ) 
+b7.2 = b7.2 %>% rename(champ = Visitor)
+
+
+c7 = rbind(a7.1,a7.2,b7.1,b7.2)
+c7 = c7  %>% group_by(szn, champ) %>%
+  summarise(
+    games = sum(games)
+    ,champ_Wins = sum(champ_Wins)
+    ,champ_Losses = sum(champ_Losses)
+  )
+c7$champ_Wins_Pct_v_W = round(c7$champ_Wins/c7$games,2)
+c7$champ_Loss_Pct_v_W = 1 - c7$champ_Wins_Pct_v_W
+
+# d7 needs to be combo of wins from c7 and c5 for a dot plot comparison...
+d7 = cbind(c7, c5, lbj_team2)
+d7 = d7[,c(1,2,6,12,14)]
+colnames(d7)[1] = "szn"
+ggplot(d7, aes(x = szn, y = champ_Wins_Pct_v_W))+geom_point() + geom_line()
+ggplot(d7, aes(x = szn, y = lbj_Win_Pct_v_W))+geom_point() + geom_line()
+
+library(scales)
+ggplot(d7)+geom_point(aes(x = szn, y = champ_Wins_Pct_v_W), color = "blue", size = 3) + 
+  geom_line(aes(x = szn, y = champ_Wins_Pct_v_W))+
+  geom_label(aes(x = szn, y = champ_Wins_Pct_v_W, label = champ), 
+             fill = "white", color = "blue", vjust = -0.5) +
+  geom_point(aes(x = szn, y = lbj_Win_Pct_v_W), color = "red", size = 3)+ 
+  geom_line(aes(x = szn, y = lbj_Win_Pct_v_W), linetype = "dashed")+
+  scale_x_continuous(breaks = 2004:2018)+
+  scale_y_continuous(labels = percent_format(accuracy = 1))+
+  ylab("")+
+  xlab("SZN")+
+  labs(
+    title = "LeBron vs NBA Champ Win Percentage Against Western Top 4 Seeds"  # Main title
+    ,caption = "*SZN = year the championship was won"  # Subtext (caption)
+  )+
+  theme(
+    legend.position = "bottom"
+    ,legend.text = element_text(size = 12)
+    ,legend.title = element_text(color = "White")
+    ,legend.direction = "vertical"
+    ,title = element_text(size = 14, face = "bold.italic")
+    ,plot.caption = element_text(size = 11, hjust = 0.0,face = "italic")  # Style the caption
+  )
+
+# use this to copy legend for image
+# LeBron vs West Seeds 1,2,3,4
+library(ggplot2)
+ggplot(d7) +
+  # Add champ_Wins_Pct_v_W
+  geom_point(aes(x = szn, y = champ_Wins_Pct_v_W, color = "NBA Champ vs West Seeds 1,2,3,4"), size = 3) +
+  geom_line(aes(x = szn, y = champ_Wins_Pct_v_W, color = "NBA Champ vs West Seeds 1,2,3,4")) +
+  geom_label(aes(x = szn, y = champ_Wins_Pct_v_W, label = champ_Wins_Pct_v_W, color = "NBA Champ vs West Seeds 1,2,3,4"),
+             fill = "white", vjust = -0.5, show.legend = FALSE) +
+  
+  # Add lbj_Win_Pct_v_W
+  geom_point(aes(x = szn, y = lbj_Win_Pct_v_W, color = "LeBron's Win % > NBA Champ's"), size = 3) +
+  geom_line(aes(x = szn, y = lbj_Win_Pct_v_W, color = "LeBron's Win % > NBA Champ's"), linetype = "dashed") +
+  geom_label(aes(x = szn, y = lbj_Win_Pct_v_W, label = lbj_Win_Pct_v_W, color = "LeBron's Win % > NBA Champ's"),
+             fill = "white", vjust = 1.5, show.legend = FALSE) +
+  
+  # Customize the legend
+  scale_color_manual(
+    name = "Legend",
+    values = c("NBA Champ vs West Seeds 1,2,3,4" = "blue", "LeBron's Win % > NBA Champ's" = "red")
+  ) +
+  
+  # Add theme for better legend placement
+  theme(    legend.position = "bottom"
+            ,legend.text = element_text(size = 12)
+            ,legend.title = element_text(color = "White")
+            ,legend.direction = "vertical")
+
+# End Creating Visuals
